@@ -7,7 +7,7 @@ class PrettyPrinter:
         self.tab = 0
 
     def visit(self, tree):
-        tree.accepted(self)
+        tree.accept(self)
         print(';')
 
     def visit_number(self, number):
@@ -18,15 +18,15 @@ class PrettyPrinter:
 
     def visit_binary_operation(self, bin_op):
         print('(', end='')
-        bin_op.lhs.accepted(self)
+        bin_op.lhs.accept(self)
         print(' ' + bin_op.op, end=' ')
-        bin_op.rhs.accepted(self)
+        bin_op.rhs.accept(self)
         print(')', end='')
 
     def visit_unary_operation(self, un_op):
         print('(', end='')
-        print(un_op.op, end=' ')
-        un_op.expr.accepted(self)
+        print(un_op.op, end='')
+        un_op.expr.accept(self)
         print(')', end='')
 
     def print_list(self, lst):
@@ -38,17 +38,17 @@ class PrettyPrinter:
             self.tab -= 4
 
     def visit_conditional(self, conditional):
-        print('if' + '(', end='')
-        conditional.condition.accepted(self)
-        print(')' + '{')
+        print('if(', end='')
+        conditional.condition.accept(self)
+        print('){')
         self.print_list(conditional.if_true)
-        print('}' + 'else' + '{')
+        print('} else {')
         self.print_list(conditional.if_false)
         print('}', end='')
 
     def visit_print(self, write):
         print('print', end='(')
-        write.expr.accepted(self)
+        write.expr.accept(self)
         print(')', end='')
 
     def visit_read(self, read):
@@ -58,9 +58,9 @@ class PrettyPrinter:
         print('(', end='')
         if lst:
             for arg in lst[:-1]:
-                arg.accepted(self)
-            print(', ', end='')
-            lst[-1].accepted(self)
+                arg.accept(self)
+                print(', ', end='')
+            lst[-1].accept(self)
             print(')', end='')
 
     def visit_func_def(self, func_def):
@@ -71,20 +71,12 @@ class PrettyPrinter:
         print('}', end='')
 
     def visit_func_call(self, func_call):
-        func_call.fun_expr.accepted(self)
+        func_call.fun_expr.accept(self)
         self.print_args(func_call.args)
 
 
 if __name__ == '__main__':
     printer = PrettyPrinter()
-    printer.visit(FunctionCall(FunctionDefinition(
-        'foo',
-        Function([], [Read('n'),
-                      Print(BinaryOperation(Reference('n'),
-                                            '/',
-                                            Reference('k')
-                                            ))])), [], ))
-
     printer.visit(Conditional(BinaryOperation(
                        Number(2),
                        '<=',

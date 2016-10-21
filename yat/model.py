@@ -30,10 +30,10 @@ class Number:
     def evaluate(self, scope):
         return self
 
-    def accepted(self, printer):
+    def accept(self, printer):
         printer.visit_number(self)
 
-    
+
 def evaluate_list(lst, scope):
     s = None
     for operation in lst:
@@ -81,8 +81,9 @@ class FunctionDefinition:
         scope[self.name] = self.function
         return self.function
 
-    def accepted(self, printer):
+    def accept(self, printer):
         printer.visit_func_def(self)
+
 
 class Conditional:
 
@@ -104,9 +105,9 @@ class Conditional:
                 return evaluate_list(self.if_false, scope)
         return None
 
-    def accepted(self, printer):
+    def accept(self, printer):
         printer.visit_conditional(self)
-   
+
 
 class Print:
 
@@ -120,7 +121,7 @@ class Print:
         print(val.value)
         return val
 
-    def accepted(self, printer):
+    def accept(self, printer):
         printer.visit_print(self)
 
 
@@ -140,7 +141,7 @@ class Read:
         scope[self.name] = num
         return scope[self.name]
 
-    def accepted(self, printer):
+    def accept(self, printer):
         printer.visit_read(self)
 
 
@@ -165,7 +166,7 @@ class FunctionCall:
             call_scope[arg] = val.evaluate(scope)
         return function.evaluate(call_scope)
 
-    def accepted(self, printer):
+    def accept(self, printer):
         printer.visit_func_call(self)
 
 
@@ -180,7 +181,7 @@ class Reference:
     def evaluate(self, scope):
         return scope[self.name]
 
-    def accepted(self, printer):
+    def accept(self, printer):
         printer.visit_reference(self)
 
 
@@ -215,7 +216,7 @@ class BinaryOperation:
         rhs = self.rhs.evaluate(scope).value
         return Number(self.binary_ops[self.op](lhs, rhs))
 
-    def accepted(self, printer):
+    def accept(self, printer):
         printer.visit_binary_operation(self)
 
 
@@ -236,5 +237,5 @@ class UnaryOperation:
         arg = self.expr.evaluate(scope).value
         return Number(self.unary_ops[self.op](arg))
 
-    def accepted(self, printer):
+    def accept(self, printer):
         printer.visit_unary_operation(self)
