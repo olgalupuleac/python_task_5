@@ -14,36 +14,30 @@ class ConstantFolder:
         return reference
 
     def visit_bin_op(self, bin_op):
-        folded_bin_op = BinaryOperation(bin_op.lhs.accept(self),
-                                        bin_op.op,
-                                        bin_op.rhs.accept(self))
-        if isinstance(
-            folded_bin_op.lhs,
-            Number) and isinstance(
-                folded_bin_op.rhs,
-                Number):
-            return folded_bin_op.evaluate(Scope())
-        if folded_bin_op.op == '*':
-            if isinstance(
-                folded_bin_op.lhs,
-                Number) and folded_bin_op.lhs.value == 0 and isinstance(
-                    folded_bin_op.rhs,
-                    Reference):
+        folded_lhs = bin_op.lhs.accept(self)
+        folded_rhs = bin_op.rhs.accept(self)
+        if (isinstance(folded_lhs, Number) and
+                isinstance(folded_rhs, Number)):
+            return BinaryOperation(folded_lhs,
+                                   bin_op.op,
+                                   folded_rhs).evaluate(Scope())
+        if bin_op.op == '*':
+            if (isinstance(folded_lhs, Number) and
+                isinstance(folded_rhs, Reference) and
+                    folded_lhs.value == 0):
                 return Number(0)
-            if isinstance(
-                folded_bin_op.rhs,
-                Number) and folded_bin_op.rhs.value == 0 and isinstance(
-                    folded_bin_op.lhs,
-                    Reference):
+            if (isinstance(folded_rhs, Number) and
+                isinstance(folded_lhs, Reference) and
+                    folded_rhs.value == 0):
                 return Number(0)
-        if isinstance(
-            folded_bin_op.lhs,
-            Reference) and isinstance(
-                folded_bin_op.rhs,
-                Reference) and folded_bin_op.op == '-':
-            if folded_bin_op.lhs.name == folded_bin_op.rhs.name:
+        if (isinstance(folded_lhs, Reference) and
+            isinstance(folded_rhs, Reference) and
+                bin_op.op == '-'):
+            if folded_lhs.name == folded_rhs.name:
                 return Number(0)
-        return folded_bin_op
+        return BinaryOperation(folded_lhs,
+                               bin_op.op,
+                               folded_rhs)
 
     def visit_un_op(self, un_op):
         folded_un_op = UnaryOperation(un_op.op, un_op.expr.accept(self))
