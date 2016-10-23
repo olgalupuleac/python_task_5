@@ -16,14 +16,14 @@ class PrettyPrinter:
     def visit_reference(self, reference):
         print(reference.name, end='')
 
-    def visit_binary_operation(self, bin_op):
+    def visit_bin_op(self, bin_op):
         print('(', end='')
         bin_op.lhs.accept(self)
         print(' ' + bin_op.op, end=' ')
         bin_op.rhs.accept(self)
         print(')', end='')
 
-    def visit_unary_operation(self, un_op):
+    def visit_un_op(self, un_op):
         print('(', end='')
         print(un_op.op, end='')
         un_op.expr.accept(self)
@@ -40,11 +40,11 @@ class PrettyPrinter:
     def visit_conditional(self, conditional):
         print('if(', end='')
         conditional.condition.accept(self)
-        print('){')
+        print(') {')
         self.print_list(conditional.if_true)
-        print('} else {')
+        print(' ' * self.tab + '} else {')
         self.print_list(conditional.if_false)
-        print('}', end='')
+        print(' ' * self.tab + '}', end='')
 
     def visit_print(self, write):
         print('print', end='(')
@@ -54,6 +54,13 @@ class PrettyPrinter:
     def visit_read(self, read):
         print('read(' + read.name, end=')')
 
+    def visit_func_def(self, func_def):
+        print(func_def.name, end='')
+        print('(' + ', '.join(func_def.function.args), end=')')
+        print(' {')
+        self.print_list(func_def.function.body)
+        print(' ' * self.tab + '}', end='')
+
     def print_args(self, lst):
         print('(', end='')
         if lst:
@@ -61,14 +68,7 @@ class PrettyPrinter:
                 arg.accept(self)
                 print(', ', end='')
             lst[-1].accept(self)
-            print(')', end='')
-
-    def visit_func_def(self, func_def):
-        print(func_def.name, end='')
-        print('(' + ', '.join(func_def.function.args), end=')')
-        print('{')
-        self.print_list(func_def.function.body)
-        print('}', end='')
+        print(')', end='')
 
     def visit_func_call(self, func_call):
         func_call.fun_expr.accept(self)
@@ -88,9 +88,14 @@ if __name__ == '__main__':
     conditional = Conditional(number, [], [])
     printer.visit(conditional)
 
-    function = Function([], [])
+    function = Function(['x', 'y', 'z'], [Print(
+        Reference('x')),
+        BinaryOperation(Reference('y'),
+                        '-',
+                        Reference('z'))])
     definition = FunctionDefinition('foo', function)
-    printer.visit(definition)
+    conditional = Conditional(Number(1), [definition], [Print(Number(5))])
+    printer.visit(conditional)
 
     number = Number(42)
     write = Print(number)

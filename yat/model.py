@@ -30,8 +30,8 @@ class Number:
     def evaluate(self, scope):
         return self
 
-    def accept(self, printer):
-        printer.visit_number(self)
+    def accept(self, visitor):
+        return visitor.visit_number(self)
 
 
 def evaluate_list(lst, scope):
@@ -64,6 +64,9 @@ class Function:
     def evaluate(self, scope):
         return evaluate_list(self.body, scope)
 
+    def accept(self, visitor):
+        return visitor.visit_func(self)
+
 
 class FunctionDefinition:
 
@@ -81,8 +84,8 @@ class FunctionDefinition:
         scope[self.name] = self.function
         return self.function
 
-    def accept(self, printer):
-        printer.visit_func_def(self)
+    def accept(self, visitor):
+        return visitor.visit_func_def(self)
 
 
 class Conditional:
@@ -105,8 +108,8 @@ class Conditional:
                 return evaluate_list(self.if_false, scope)
         return None
 
-    def accept(self, printer):
-        printer.visit_conditional(self)
+    def accept(self, visitor):
+        return visitor.visit_conditional(self)
 
 
 class Print:
@@ -121,8 +124,8 @@ class Print:
         print(val.value)
         return val
 
-    def accept(self, printer):
-        printer.visit_print(self)
+    def accept(self, visitor):
+        return visitor.visit_print(self)
 
 
 class Read:
@@ -141,8 +144,8 @@ class Read:
         scope[self.name] = num
         return scope[self.name]
 
-    def accept(self, printer):
-        printer.visit_read(self)
+    def accept(self, visitor):
+        return visitor.visit_read(self)
 
 
 class FunctionCall:
@@ -166,8 +169,8 @@ class FunctionCall:
             call_scope[arg] = val.evaluate(scope)
         return function.evaluate(call_scope)
 
-    def accept(self, printer):
-        printer.visit_func_call(self)
+    def accept(self, visitor):
+        return visitor.visit_func_call(self)
 
 
 class Reference:
@@ -181,8 +184,8 @@ class Reference:
     def evaluate(self, scope):
         return scope[self.name]
 
-    def accept(self, printer):
-        printer.visit_reference(self)
+    def accept(self, visitor):
+        return visitor.visit_reference(self)
 
 
 class BinaryOperation:
@@ -216,8 +219,8 @@ class BinaryOperation:
         rhs = self.rhs.evaluate(scope).value
         return Number(self.binary_ops[self.op](lhs, rhs))
 
-    def accept(self, printer):
-        printer.visit_binary_operation(self)
+    def accept(self, visitor):
+        return visitor.visit_bin_op(self)
 
 
 class UnaryOperation:
@@ -237,5 +240,5 @@ class UnaryOperation:
         arg = self.expr.evaluate(scope).value
         return Number(self.unary_ops[self.op](arg))
 
-    def accept(self, printer):
-        printer.visit_unary_operation(self)
+    def accept(self, visitor):
+        return visitor.visit_un_op(self)
