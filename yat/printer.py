@@ -38,7 +38,7 @@ class PrettyPrinter:
             self.tab -= 4
 
     def visit_conditional(self, conditional):
-        print('if(', end='')
+        print('if (', end='')
         conditional.condition.accept(self)
         print(') {')
         self.print_list(conditional.if_true)
@@ -55,7 +55,7 @@ class PrettyPrinter:
         print('read(' + read.name, end=')')
 
     def visit_func_def(self, func_def):
-        print(func_def.name, end='')
+        print('def ' + func_def.name, end='')
         print('(' + ', '.join(func_def.function.args), end=')')
         print(' {')
         self.print_list(func_def.function.body)

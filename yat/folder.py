@@ -1,5 +1,5 @@
 from yat.model import *
-from printer import *
+from yat.printer import *
 
 
 class ConstantFolder:
@@ -14,28 +14,44 @@ class ConstantFolder:
         return reference
 
     def visit_bin_op(self, bin_op):
-        if isinstance(bin_op.lhs, Number) and isinstance(bin_op.rhs,
-                                                         Number):
-            scope = Scope()
-            return bin_op.evaluate(scope)
-        if bin_op.op == '*':
-            if isinstance(bin_op.lhs, Number) and bin_op.lhs.value == 0:
+        folded_bin_op = BinaryOperation(bin_op.lhs.accept(self),
+                                        bin_op.op,
+                                        bin_op.rhs.accept(self))
+        if isinstance(
+            folded_bin_op.lhs,
+            Number) and isinstance(
+                folded_bin_op.rhs,
+                Number):
+            return folded_bin_op.evaluate(Scope())
+        if folded_bin_op.op == '*':
+            if isinstance(
+                folded_bin_op.lhs,
+                Number) and folded_bin_op.lhs.value == 0 and isinstance(
+                    folded_bin_op.rhs,
+                    Reference):
                 return Number(0)
-            if isinstance(bin_op.rhs, Number) and bin_op.rhs.value == 0:
+            if isinstance(
+                folded_bin_op.rhs,
+                Number) and folded_bin_op.rhs.value == 0 and isinstance(
+                    folded_bin_op.lhs,
+                    Reference):
                 return Number(0)
-        if isinstance(bin_op.lhs, Reference) and isinstance(bin_op.rhs,
-                                                            Reference):
-            if bin_op.op == '-' and bin_op.lhs.name == bin_op.rhs.name:
+        if isinstance(
+            folded_bin_op.lhs,
+            Reference) and isinstance(
+                folded_bin_op.rhs,
+                Reference) and folded_bin_op.op == '-':
+            if folded_bin_op.lhs.name == folded_bin_op.rhs.name:
                 return Number(0)
-        return bin_op
+        return folded_bin_op
 
     def visit_un_op(self, un_op):
-        if isinstance(un_op.expr, Number):
-            scope = Scope()
-            return un_op.evaluate(scope)
-        return un_op
+        folded_un_op = UnaryOperation(un_op.op, un_op.expr.accept(self))
+        if isinstance(folded_un_op.expr, Number):
+            return folded_un_op.evaluate(Scope())
+        return folded_un_op
 
-    def accept_list(self, lst):
+    def fold_list(self, lst):
         folded_lst = []
         if lst:
             for op in lst:
@@ -44,8 +60,8 @@ class ConstantFolder:
 
     def visit_conditional(self, conditional):
         return Conditional(conditional.condition.accept(self),
-                           self.accept_list(conditional.if_true),
-                           self.accept_list(conditional.if_false))
+                           self.fold_list(conditional.if_true),
+                           self.fold_list(conditional.if_false))
 
     def visit_print(self, write):
         return Print(write.expr.accept(self))
@@ -54,17 +70,17 @@ class ConstantFolder:
         return read
 
     def visit_func(self, func):
-        return Function(func.args, self.accept_list(func.body))
+        return Function(func.args, self.fold_list(func.body))
 
     def visit_func_def(self, func_def):
         return FunctionDefinition(func_def.name,
                                   Function(func_def.function.args,
-                                           self.accept_list(
+                                           self.fold_list(
                                                func_def.function.body)))
 
     def visit_func_call(self, func_call):
         return FunctionCall(func_call.fun_expr.accept(self),
-                            self.accept_list(func_call.args))
+                            self.fold_list(func_call.args))
 
 
 if __name__ == '__main__':
@@ -74,18 +90,24 @@ if __name__ == '__main__':
     printer.visit(folder.visit(Number(9)))
 
     function = Function(['x', 'y', 'z'], [Print(Reference('x')),
-                                          UnaryOperation('-', Number(10)),
+                                          UnaryOperation('-', BinaryOperation(
+                                              Number(2),
+                                              '+',
+                                              Reference('x'))),
                                           BinaryOperation(Reference('y'),
                                                           '-',
                                                           Reference('z'))])
     definition = FunctionDefinition('foo', function)
     conditional = Conditional(Number(1), [definition], [Print(Number(5))])
-    printer.visit(conditional)
+    printer.visit(folder.visit(conditional))
 
     printer.visit(folder.visit(Conditional(BinaryOperation(
                                               Number(2),
-                                              '<=',
-                                              Number(5)
+                                              '+',
+                                              BinaryOperation(
+                                                           Reference('n'),
+                                                           '-',
+                                                           Reference('n'))
                                              ), [Print(BinaryOperation(
                                                            Reference('n'),
                                                            '-',
